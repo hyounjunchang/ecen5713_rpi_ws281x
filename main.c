@@ -56,7 +56,7 @@ static char VERSION[] = "XX.YY.ZZ";
 
 // defaults for cmdline options
 #define TARGET_FREQ             WS2811_TARGET_FREQ
-#define GPIO_PIN                18
+#define GPIO_PIN                10 // GPIO 10 for SPI MOSI, pin 19 for Pi 4B
 #define DMA                     10
 
 //(16x16 matrix is RGB)
