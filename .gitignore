@@ -6,6 +6,7 @@ newtest
 *.o
 *.a
 *.swp
+led_blink
 
 build/
 release/
