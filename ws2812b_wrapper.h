@@ -1,0 +1,4 @@
+#ifndef WS2812B_WRAPPER_H
+#define WS2812B_WRAPPER_H
+
+#endif
