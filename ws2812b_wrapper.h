@@ -1,4 +1,8 @@
 #include "ws2811.h"
+#include "clk.h"
+#include "gpio.h"
+#include "dma.h"
+#include "pwm.h"
 
 #ifndef WS2812B_WRAPPER_H
 #define WS2812B_WRAPPER_H
