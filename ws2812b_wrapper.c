@@ -112,7 +112,7 @@ int clear_led_grid(){
     return retval;
 }
 
-void matrix_insert_top_row(ws2811_led_t* colors){
+void grid_insert_top_row(ws2811_led_t* colors){
     int x, y;
     // shift led down by one row
     for (y = 0; y < height - 1; y++){

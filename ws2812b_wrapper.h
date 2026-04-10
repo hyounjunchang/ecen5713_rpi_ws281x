@@ -39,14 +39,16 @@ typedef enum {
 extern ws2811_led_t dotcolors[];
 extern ws2811_t ledstring;
 
-int init_led_grid();
-void free_led_grid();
-int render_led_grid();
-int clear_led_grid();
-void matrix_insert_top_row(ws2811_led_t* colors);
-void matrix_render();
-void matrix_reorder_to_pcb();
-void matrix_clear();
+// LED grid functions: see main.c of this repo for usage examples
+int init_led_grid(); // Initializes LED grid for use (using SPI bus on GPIO 10) with all LEDs turned off
+void free_led_grid(); // Frees memory and bus for later reuse
+int render_led_grid(); // Renders matrix buffer
+int clear_led_grid(); // turns off all LEDs on grid
+void grid_insert_top_row(ws2811_led_t* colors); // Inserts colors on the TOP row specified by input
 
-
+// Helper functions for setting the grid
+// Uses buffer "matrix" ==> color matrix to be rendered on grid
+void matrix_render(); // Renders matrix color buffer to LED grid
+void matrix_reorder_to_pcb(); // Reorders matrix to PCB order for rendering
+void matrix_clear(); // sets all matrix to 0;
 #endif
