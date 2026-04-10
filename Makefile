@@ -1,9 +1,23 @@
-all: led_blink
+CC      = gcc
+CFLAGS  = -Wall -Wextra -g -MMD -MP
+LDFLAGS = -lm
 
-led_blink: main.c mailbox.c ws2811.c pwm.c pcm.c dma.c rpihw.c
-	gcc main.c mailbox.c ws2811.c pwm.c pcm.c dma.c rpihw.c -lm -o led_blink
+TARGET  = led_blink
+SRCS    = $(wildcard *.c)
+OBJS    = $(SRCS:.c=.o)
+DEPS    = $(OBJS:.o=.d)
+
+all: $(TARGET)
+
+$(TARGET): $(OBJS)
+	$(CC) $(OBJS) -o $(TARGET) $(LDFLAGS)
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+-include $(DEPS)
 
 clean:
-	rm -f led_blink
+	rm -f $(OBJS) $(DEPS) $(TARGET) *.o *.d
 
-.PHONY: clean
+.PHONY: all clean
