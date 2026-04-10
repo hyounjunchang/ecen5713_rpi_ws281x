@@ -64,9 +64,8 @@ int main() {
         usleep(100 * 1000);  // 100ms per tick = ~10 rows/sec
     }
 
-    clear_led_grid();
-    render_led_grid();
-    free_led_grid();
+    clear_led_grid(); // turn off all led strip lights
+    free_led_grid(); // free memory and buses
 
     return EXIT_SUCCESS;
 }
