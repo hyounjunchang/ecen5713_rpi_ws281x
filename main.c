@@ -29,10 +29,10 @@ int main() {
 
     // Build the colored row — one solid color across the full width
     ws2811_led_t color_row[WIDTH];
-
+    memset(color_row, 0, sizeof(color_row));
     int color_index = 0;
     int tick = 0;
-    const int block_height = 1;   // rows of color per block
+    const int block_height = 3;   // rows of color per block
     const int gap_height   = 3;   // blank rows between blocks
     const int period       = block_height + gap_height;
 
@@ -43,7 +43,7 @@ int main() {
         if (tick % period < block_height) {
             // Colored portion of the block
             ws2811_led_t color = dotcolors[color_index];
-            for (int x = 0; x < WIDTH; x++) {
+            for (int x = 0; x < WIDTH_BLOCK; x++) {
                 color_row[x] = color;
             }
             grid_insert_top_row(color_row);
