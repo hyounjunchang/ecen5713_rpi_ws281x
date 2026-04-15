@@ -14,7 +14,7 @@ Claude Code was used to help debug: https://claude.ai/chat/09145b22-92ff-4de6-bf
 
 const int width = WIDTH;
 const int height = HEIGHT;
-
+const int width_block = WIDTH_BLOCK;
 ws2811_led_t dotcolors[COLOR_COUNT] =
 {
     0x00200000,  // red
@@ -116,14 +116,34 @@ void grid_insert_top_row(ws2811_led_t* colors){
     int x, y;
     // shift led down by one row
     for (y = 0; y < height - 1; y++){
-        for (x = 0; x < width; x++){
+        for (x = 0; x < width_block; x++){
             matrix[y * width + x] = matrix[(y + 1)*width + x];
         }
     }
-    for (x = 0; x < width; x++){
+    for (x = 0; x < width_block; x++){
         matrix[(height-1)*width + x] = colors[x];
     }
 
+}
+
+void grid_insert_lane(ws2811_led_t* colors , uint8_t lane)
+{
+  if(lane >= 0 && lane < 4)
+  { 
+    int x, y;
+    int lane_start = lane * width_block;
+    // shift led down by one row
+    for (y = 0; y < height - 1; y++){
+        for (x = 0; x < width_block; x++){
+            matrix[y * width + lane_start + x] = matrix[(y + 1) * width + lane_start + x];
+        }
+    }
+    for (x = 0; x < width_block; x++){
+        matrix[(height - 1) * width + lane_start + x] = colors[x];
+    }
+  }
+  
+  return;
 }
 
 void matrix_render()

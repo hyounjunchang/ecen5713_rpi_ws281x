@@ -19,7 +19,7 @@
 //#define STRIP_TYPE              WS2811_STRIP_GBR		// WS2812/SK6812RGB integrated chip+leds
 //#define STRIP_TYPE            SK6812_STRIP_RGBW		// SK6812RGBW (NOT SK6812RGB)
 
-#define WIDTH_BLOCK                   8
+#define WIDTH_BLOCK                   4
 #define WIDTH                   16
 #define HEIGHT                  16
 #define LED_COUNT               (WIDTH * HEIGHT)
@@ -46,7 +46,7 @@ void free_led_grid(); // Frees memory and bus for later reuse
 int render_led_grid(); // Renders matrix buffer
 int clear_led_grid(); // turns off all LEDs on grid
 void grid_insert_top_row(ws2811_led_t* colors); // Inserts colors on the TOP row specified by input
-
+void grid_insert_lane(ws2811_led_t* colors , uint8_t lane);
 // Helper functions for setting the grid
 // Uses buffer "matrix" ==> color matrix to be rendered on grid
 void matrix_render(); // Renders matrix color buffer to LED grid

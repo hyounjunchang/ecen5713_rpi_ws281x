@@ -6,7 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>
-
+#include "tiles_grid.h"
 static volatile int running = 1;
 
 void signal_handler(int sig) {
@@ -31,33 +31,65 @@ int main() {
     ws2811_led_t color_row[WIDTH];
     memset(color_row, 0, sizeof(color_row));
     int color_index = 0;
+    int lane_index = 0;
     int tick = 0;
     const int block_height = 3;   // rows of color per block
     const int gap_height   = 3;   // blank rows between blocks
-    const int period       = block_height + gap_height;
+    int period       = block_height + gap_height;
 
+    
+    note_t lane1[3];
+    
+    lane1[0].duration_ms = 200;
+    lane1[0].time_ms = 1000;
+    lane1[1].duration_ms = 100;
+    lane1[1].time_ms = 2000;
 
+    lane1[2].duration_ms = 100;
+    lane1[2].time_ms = 3000;
+    
+    uint8_t lane1_index = 0;
+    int shaded_duration = lane1[0].time_ms;
+    int darkened_duration = lane1[0].duration_ms + lane1[0].time_ms - lane1[1].duration_ms;
+    period = shaded_duration + darkened_duration;
     // Example 1: color row falling down to bottom
-    while (running && tick < 80) {
+    while (running && tick < 800) {
         // Determine what to insert at the top this tick
-        if (tick % period < block_height) {
+        if (!(tick % period))
+        {
+         
+         shaded_duration = lane1[lane1_index].time_ms;
+         
+         if(lane1_index + 1 < sizeof(lane1)/sizeof(note_t))
+         {
+                  darkened_duration = lane1[lane1_index+1].time_ms - lane1[lane1_index].duration_ms + lane1[lane1_index].time_ms;			     	 
+         }
+         color_index = (color_index + 1) % COLOR_COUNT;
+         period = shaded_duration + darkened_duration;
+         lane1_index += 1;
+
+        }
+        if (tick % period < shaded_duration) {
             // Colored portion of the block
             ws2811_led_t color = dotcolors[color_index];
             for (int x = 0; x < WIDTH_BLOCK; x++) {
                 color_row[x] = color;
             }
-            grid_insert_top_row(color_row);
+            grid_insert_lane(color_row , lane_index) ;
+            grid_insert_lane(blank_row, (lane_index + 1) & 3);
+            grid_insert_lane(blank_row, (lane_index + 2) & 3);
+            grid_insert_lane(blank_row, (lane_index + 3) & 3);
         } else {
             // Gap between blocks
-            grid_insert_top_row(blank_row);
+            grid_insert_lane(blank_row , lane_index) ;
+            grid_insert_lane(blank_row, (lane_index + 1) & 3);
+            grid_insert_lane(blank_row, (lane_index + 2) & 3);
+            grid_insert_lane(blank_row, (lane_index + 3) & 3);
         }
 
         // Advance color every time we finish a full block+gap cycle
-        if (tick % period == period - 1) {
-            color_index = (color_index + 1) % COLOR_COUNT;
-        }
 
-        tick++;
+        tick+=10;
 
         if (render_led_grid() != 0) {
             break; // LED grid not rendered
