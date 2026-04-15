@@ -800,7 +800,7 @@ static ws2811_return_t spi_init(ws2811_t *ws2811)
     device->mbox.handle = -1;
 
     // Set SPI-MOSI pin
-    device->gpio = mapmem(GPIO_OFFSET + base, sizeof(gpio_t), DEV_GPIOMEM);
+    device->gpio = mapmem(GPIO_OFFSET + base, sizeof(gpio_t), DEV_MEM);
     if (!device->gpio)
     {
         return WS2811_ERROR_SPI_SETUP;
