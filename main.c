@@ -7,11 +7,105 @@
 #include <unistd.h>
 #include <signal.h>
 #include "tiles_grid.h"
+
+
+#define LANE_COUNT 4
+
 static volatile int running = 1;
 
 void signal_handler(int sig) {
     (void)sig;
     running = 0;
+}
+
+typedef struct {
+    uint8_t lane[LANE_COUNT];
+} frame_t;
+
+typedef struct {
+    frame_t *frames;
+    size_t count;
+    size_t capacity;
+} frame_buffer_t;
+
+static void frame_buffer_init(frame_buffer_t *buf)
+{
+    buf->frames = NULL;
+    buf->count = 0;
+    buf->capacity = 0;
+}
+
+static void frame_buffer_free(frame_buffer_t *buf)
+{
+    free(buf->frames);
+    buf->frames = NULL;
+    buf->count = 0;
+    buf->capacity = 0;
+}
+
+static int frame_buffer_push(frame_buffer_t *buf, frame_t frame)
+{
+    if (buf->count == buf->capacity) {
+        size_t new_capacity = (buf->capacity == 0) ? 128 : buf->capacity * 2;
+        frame_t *new_frames = realloc(buf->frames, new_capacity * sizeof(frame_t));
+        if (!new_frames) {
+            return -1;
+        }
+        buf->frames = new_frames;
+        buf->capacity = new_capacity;
+    }
+    buf->frames[buf->count++] = frame;
+    return 0;
+}
+
+static int parse_csv_frames(const char *filename, frame_buffer_t *out)
+{
+    FILE *fp = fopen(filename, "r");
+    if (!fp) {
+        perror("fopen");
+        return -1;
+    }
+
+    char line[256];
+
+    /* Read and skip header */
+    if (!fgets(line, sizeof(line), fp)) {
+        fclose(fp);
+        fprintf(stderr, "Error: empty file\n");
+        return -1;
+    }
+
+    while (fgets(line, sizeof(line), fp)) {
+        frame_t frame;
+        int l0, l1, l2, l3;
+
+        /* Remove trailing newline if present */
+        line[strcspn(line, "\r\n")] = '\0';
+
+        /* Skip empty lines */
+        if (line[0] == '\0') {
+            continue;
+        }
+
+        if (sscanf(line, "%d,%d,%d,%d", &l0, &l1, &l2, &l3) != 4) {
+            fprintf(stderr, "Warning: skipping malformed line: %s\n", line);
+            continue;
+        }
+
+        frame.lane[0] = (uint8_t)l0;
+        frame.lane[1] = (uint8_t)l1;
+        frame.lane[2] = (uint8_t)l2;
+        frame.lane[3] = (uint8_t)l3;
+
+        if (frame_buffer_push(out, frame) != 0) {
+            fclose(fp);
+            fprintf(stderr, "Error: out of memory while storing frames\n");
+            return -1;
+        }
+    }
+
+    fclose(fp);
+    return 0;
 }
 
 int main() {
@@ -28,7 +122,7 @@ int main() {
     memset(blank_row, 0, sizeof(blank_row));
 
     // Build the colored row — one solid color across the full width
-    ws2811_led_t color_row[WIDTH];
+    ws2811_led_t color_row[4][WIDTH];
     memset(color_row, 0, sizeof(color_row));
     int color_index = 0;
     int lane_index = 0;
@@ -38,130 +132,47 @@ int main() {
     int period       = block_height + gap_height;
 
     
+    frame_buffer_t frames;
+    frame_buffer_init(&frames);
+
+    if (parse_csv_frames("LetitBe.csv", &frames) != 0) {
+        fprintf(stderr, "Failed to parse CSV\n");
+        return 1;
+    }
+    
+
+   
+    ws2811_led_t active_color = dotcolors[0];
+    
+    for (int y = 0 ; y < 4 ; y++)
+    {
+        for (int x = 0; x < WIDTH_BLOCK; x++) {
+        	color_row[y][x] = dotcolors[y];
+    	}
+    }
 
     
-note_t lane1[20];
 
-// Early section
-lane1[0]  = (note_t){ .time_ms = 0,    .duration_ms = 1900 };
-lane1[1]  = (note_t){ .time_ms = 2000, .duration_ms = 500  };
-lane1[2]  = (note_t){ .time_ms = 3000, .duration_ms = 300  };
+    for (size_t i = 0; running && i < frames.count; i++) {
+	  for (int lane = 0; lane < 4; lane++) {
+		if (frames.frames[i].lane[lane]) {
+		    grid_insert_lane(color_row[lane], lane);
+		} else {
+		    grid_insert_lane(blank_row, lane);
+		}
+	    }
 
-// Mid section
-lane1[3]  = (note_t){ .time_ms = 3500, .duration_ms = 100  };
-lane1[4]  = (note_t){ .time_ms = 4000, .duration_ms = 800  };
-lane1[5]  = (note_t){ .time_ms = 5000, .duration_ms = 100  };
-lane1[6]  = (note_t){ .time_ms = 5500, .duration_ms = 1200 };
-lane1[7]  = (note_t){ .time_ms = 7000, .duration_ms = 300  };
+	    if (render_led_grid() != 0) {
+		break;
+	    }
 
-// Faster stream
-lane1[8]  = (note_t){ .time_ms = 7500, .duration_ms = 80   };
-lane1[9]  = (note_t){ .time_ms = 7700, .duration_ms = 80   };
-lane1[10] = (note_t){ .time_ms = 7900, .duration_ms = 80   };
-lane1[11] = (note_t){ .time_ms = 8100, .duration_ms = 80   };
-
-// Mixed holds + taps
-lane1[12] = (note_t){ .time_ms = 8500, .duration_ms = 1000 };
-lane1[13] = (note_t){ .time_ms = 9600, .duration_ms = 100  };
-lane1[14] = (note_t){ .time_ms = 10000,.duration_ms = 400  };
-lane1[15] = (note_t){ .time_ms = 10500,.duration_ms = 100  };
-
-// Ending section
-lane1[16] = (note_t){ .time_ms = 11000,.duration_ms = 1500 };
-lane1[17] = (note_t){ .time_ms = 13000,.duration_ms = 100  };
-lane1[18] = (note_t){ .time_ms = 13500,.duration_ms = 600  };
-lane1[19] = (note_t){ .time_ms = 14500,.duration_ms = 100  };
-    uint8_t lane1_index = 0;
-    int shaded_duration = lane1[0].duration_ms;
-    int darkened_duration = lane1[1].time_ms - (lane1[0].duration_ms + lane1[0].time_ms);
-    period = shaded_duration + darkened_duration;
-    // Example 1: color row falling down to bottom
-    while (running && tick < (lane1[(sizeof(lane1)/sizeof(note_t)) - 1].time_ms +  lane1[(sizeof(lane1)/sizeof(note_t)) - 1].duration_ms + 320)  ) {
-        // Determine what to insert at the top this tick
-        if (!(tick % period))
-        {
-        
-         printf("Period has passed %d\r\n",period);
-         
-         shaded_duration = lane1[lane1_index].duration_ms;
-         
-         printf("Shaded duration %d\r\n",shaded_duration);
-         
-         if(lane1_index + 1 < sizeof(lane1)/sizeof(note_t))
-         {
-                  darkened_duration = lane1[lane1_index+1].time_ms - (lane1[lane1_index].duration_ms + lane1[lane1_index].time_ms);
-            printf("Darkened duration %d\r\n",darkened_duration);			     	 
-         }
-         else if (lane1_index + 1 == sizeof(lane1)/sizeof(note_t))
-         {
-         	darkened_duration = 320;
-         }
-         else
-         {
-         	break;
-         }
-         color_index = (color_index + 1) % COLOR_COUNT;
-         period = shaded_duration + darkened_duration;
-         lane1_index += 1;
-
-        }
-        if (tick % period < shaded_duration) {
-            // Colored portion of the block
-            ws2811_led_t color = dotcolors[color_index];
-            for (int x = 0; x < WIDTH_BLOCK; x++) {
-                color_row[x] = color;
-            }
-            grid_insert_lane(color_row , lane_index) ;
-            grid_insert_lane(blank_row, (lane_index + 1) & 3);
-            grid_insert_lane(blank_row, (lane_index + 2) & 3);
-            grid_insert_lane(blank_row, (lane_index + 3) & 3);
-        } else {
-            // Gap between blocks
-            grid_insert_lane(blank_row , lane_index) ;
-            grid_insert_lane(blank_row, (lane_index + 1) & 3);
-            grid_insert_lane(blank_row, (lane_index + 2) & 3);
-            grid_insert_lane(blank_row, (lane_index + 3) & 3);
-        }
-
-        // Advance color every time we finish a full block+gap cycle
-
-        tick+=20;
-
-        if (render_led_grid() != 0) {
-            break; // LED grid not rendered
-        }
-
-        usleep(20 * 1000);  // 10ms per tick = ~10 rows/sec
+	    usleep(100 * 1000);   // if each CSV row is 10 ms
     }
 
     clear_led_grid(); // turn off all led strip lights
     usleep(100 * 1000);  // 100ms per tick = ~10 rows/sec
 
-    // Example 2: Diagonal Line (Bottom-Left to Top Right) Shfting down
-    // Only 4 LEDs are lit every row, shifting towards right each time, with colors changing on each row
-    while (running && tick < 200) {
-        // Determine what to insert at the top this tick
-        int start_x = tick % WIDTH;
-        int end_x = (tick+4) % WIDTH;
 
-        ws2811_led_t color = dotcolors[tick % COLOR_COUNT];
-        for (int x = 0; x < WIDTH; x++){
-            color_row[x] = 0;
-        }
-        for (int x = start_x; x != end_x; x = (x+1) % WIDTH){
-            color_row[x] = color;
-        }
-
-        grid_insert_top_row(color_row);
-        if (render_led_grid() != 0) {
-            break; // LED grid not rendered
-        }
-
-        tick++;
-        usleep(100 * 1000);  // 100ms per tick = ~10 rows/sec
-    }
-
-    clear_led_grid(); // turn off all led strip lights
     free_led_grid(); // free memory and buses
 
     return EXIT_SUCCESS;
