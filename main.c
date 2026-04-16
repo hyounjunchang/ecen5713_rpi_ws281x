@@ -38,31 +38,67 @@ int main() {
     int period       = block_height + gap_height;
 
     
-    note_t lane1[3];
-    
-    lane1[0].duration_ms = 200;
-    lane1[0].time_ms = 1000;
-    lane1[1].duration_ms = 100;
-    lane1[1].time_ms = 2000;
 
-    lane1[2].duration_ms = 100;
-    lane1[2].time_ms = 3000;
     
+note_t lane1[20];
+
+// Early section
+lane1[0]  = (note_t){ .time_ms = 0,    .duration_ms = 1900 };
+lane1[1]  = (note_t){ .time_ms = 2000, .duration_ms = 500  };
+lane1[2]  = (note_t){ .time_ms = 3000, .duration_ms = 300  };
+
+// Mid section
+lane1[3]  = (note_t){ .time_ms = 3500, .duration_ms = 100  };
+lane1[4]  = (note_t){ .time_ms = 4000, .duration_ms = 800  };
+lane1[5]  = (note_t){ .time_ms = 5000, .duration_ms = 100  };
+lane1[6]  = (note_t){ .time_ms = 5500, .duration_ms = 1200 };
+lane1[7]  = (note_t){ .time_ms = 7000, .duration_ms = 300  };
+
+// Faster stream
+lane1[8]  = (note_t){ .time_ms = 7500, .duration_ms = 80   };
+lane1[9]  = (note_t){ .time_ms = 7700, .duration_ms = 80   };
+lane1[10] = (note_t){ .time_ms = 7900, .duration_ms = 80   };
+lane1[11] = (note_t){ .time_ms = 8100, .duration_ms = 80   };
+
+// Mixed holds + taps
+lane1[12] = (note_t){ .time_ms = 8500, .duration_ms = 1000 };
+lane1[13] = (note_t){ .time_ms = 9600, .duration_ms = 100  };
+lane1[14] = (note_t){ .time_ms = 10000,.duration_ms = 400  };
+lane1[15] = (note_t){ .time_ms = 10500,.duration_ms = 100  };
+
+// Ending section
+lane1[16] = (note_t){ .time_ms = 11000,.duration_ms = 1500 };
+lane1[17] = (note_t){ .time_ms = 13000,.duration_ms = 100  };
+lane1[18] = (note_t){ .time_ms = 13500,.duration_ms = 600  };
+lane1[19] = (note_t){ .time_ms = 14500,.duration_ms = 100  };
     uint8_t lane1_index = 0;
-    int shaded_duration = lane1[0].time_ms;
-    int darkened_duration = lane1[0].duration_ms + lane1[0].time_ms - lane1[1].duration_ms;
+    int shaded_duration = lane1[0].duration_ms;
+    int darkened_duration = lane1[1].time_ms - (lane1[0].duration_ms + lane1[0].time_ms);
     period = shaded_duration + darkened_duration;
     // Example 1: color row falling down to bottom
-    while (running && tick < 800) {
+    while (running && tick < (lane1[(sizeof(lane1)/sizeof(note_t)) - 1].time_ms +  lane1[(sizeof(lane1)/sizeof(note_t)) - 1].duration_ms + 320)  ) {
         // Determine what to insert at the top this tick
         if (!(tick % period))
         {
+        
+         printf("Period has passed %d\r\n",period);
          
-         shaded_duration = lane1[lane1_index].time_ms;
+         shaded_duration = lane1[lane1_index].duration_ms;
+         
+         printf("Shaded duration %d\r\n",shaded_duration);
          
          if(lane1_index + 1 < sizeof(lane1)/sizeof(note_t))
          {
-                  darkened_duration = lane1[lane1_index+1].time_ms - lane1[lane1_index].duration_ms + lane1[lane1_index].time_ms;			     	 
+                  darkened_duration = lane1[lane1_index+1].time_ms - (lane1[lane1_index].duration_ms + lane1[lane1_index].time_ms);
+            printf("Darkened duration %d\r\n",darkened_duration);			     	 
+         }
+         else if (lane1_index + 1 == sizeof(lane1)/sizeof(note_t))
+         {
+         	darkened_duration = 320;
+         }
+         else
+         {
+         	break;
          }
          color_index = (color_index + 1) % COLOR_COUNT;
          period = shaded_duration + darkened_duration;
@@ -89,13 +125,13 @@ int main() {
 
         // Advance color every time we finish a full block+gap cycle
 
-        tick+=10;
+        tick+=20;
 
         if (render_led_grid() != 0) {
             break; // LED grid not rendered
         }
 
-        usleep(100 * 1000);  // 100ms per tick = ~10 rows/sec
+        usleep(20 * 1000);  // 10ms per tick = ~10 rows/sec
     }
 
     clear_led_grid(); // turn off all led strip lights
