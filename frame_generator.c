@@ -5,8 +5,8 @@ ws2811_led_t active_color[WIDTH_BLOCK];
 ws2811_led_t inactive_color[WIDTH_BLOCK];
 // Build the colored row — one solid color across the full width
 ws2811_led_t color_row[4][WIDTH];  
-// Build the colored row — one solid color across the full width
-ws2811_led_t color_row[4][WIDTH];  
+// Build a blank row (black) for spacing between color rows
+ws2811_led_t blank_row[WIDTH]; 
 ws2811_led_t status[WIDTH_BLOCK];
 size_t frame_count;
 
@@ -98,7 +98,7 @@ void init_frame()
 
     if (parse_csv_frames("LetitBe.csv", &frames) != 0) {
         fprintf(stderr, "Failed to parse CSV\n");
-        return 1;
+        return;
     }
     
     for (int y = 0 ; y < WIDTH_BLOCK ; y++)
@@ -119,6 +119,8 @@ void init_frame()
         	color_row[y][x] = dotcolors[y];
     	}
     }
+    memset(blank_row, 0, sizeof(blank_row));
+    return;
 }
 
 void render_frame(bool active_row , uint8_t active_lane)
@@ -126,7 +128,7 @@ void render_frame(bool active_row , uint8_t active_lane)
   if(frame_count < frames.count)
   {
     for (int lane = 0; lane < 4; lane++) {
-	if (frames.frames[i].lane[lane]) {
+	if (frames.frames[frame_count].lane[lane]) {
 	    grid_insert_lane(color_row[lane], lane);
 	    //grid_set_bottom_lane(active_color,lane);
 
@@ -139,10 +141,9 @@ void render_frame(bool active_row , uint8_t active_lane)
     printf("%d %d %d %d\r\n" , status[0],status[1],status[2],status[3]);
 
     if (render_led_grid() != 0) {
-	break;
+	return;
     }
     frame_count++;
   }
-
 }
 
