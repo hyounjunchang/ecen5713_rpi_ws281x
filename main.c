@@ -37,7 +37,7 @@ int main() {
     memset(blank_row, 0, sizeof(blank_row));
 
     // Build the colored row — one solid color across the full width
-    ws2811_led_t color_row[4][WIDTH];
+    ws2811_led_t color_row[4][WIDTH];   
     memset(color_row, 0, sizeof(color_row));
     int color_index = 0;
     int lane_index = 0;
@@ -57,8 +57,22 @@ int main() {
     
 
    
-    ws2811_led_t active_color = dotcolors[0];
+    ws2811_led_t active_color[WIDTH_BLOCK];
     
+    for (int y = 0 ; y < WIDTH_BLOCK ; y++)
+    {
+       active_color[y] = dotcolors[5];
+    	
+    }
+    
+    ws2811_led_t inactive_color[WIDTH_BLOCK];
+    
+    for (int y = 0 ; y < WIDTH_BLOCK ; y++)
+    {
+       inactive_color[y] = dotcolors[6];
+    	
+    }
+  
     for (int y = 0 ; y < 4 ; y++)
     {
         for (int x = 0; x < WIDTH_BLOCK; x++) {
@@ -66,16 +80,21 @@ int main() {
     	}
     }
 
-    
+    ws2811_led_t status[WIDTH_BLOCK];
 
     for (size_t i = 0; running && i < frames.count; i++) {
 	  for (int lane = 0; lane < 4; lane++) {
 		if (frames.frames[i].lane[lane]) {
 		    grid_insert_lane(color_row[lane], lane);
+		    //grid_set_bottom_lane(active_color,lane);
+
 		} else {
 		    grid_insert_lane(blank_row, lane);
+	            //grid_set_bottom_lane(inactive_color,lane);
 		}
 	    }
+	    grid_get_bottom_lane(status,0);
+	    printf("%d %d %d %d\r\n" , status[0],status[1],status[2],status[3]);
 
 	    if (render_led_grid() != 0) {
 		break;

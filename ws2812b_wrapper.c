@@ -146,6 +146,31 @@ void grid_insert_lane(ws2811_led_t* colors , uint8_t lane)
   return;
 }
 
+void grid_set_bottom_lane(ws2811_led_t* colors, uint8_t lane)
+{
+    if (lane >= 4) return;
+
+    int lane_start = lane * width_block;
+
+    for (int x = 0; x < width_block; x++) {
+        matrix[width + lane_start + x] = colors[x];
+        matrix[lane_start + x] = colors[x];
+    }
+}
+
+void grid_get_bottom_lane(ws2811_led_t* status, uint8_t lane)
+{
+    if (lane >= 4) return;
+    
+    if(!status) return;
+
+    int lane_start = lane * width_block;
+
+    for (int x = 0; x < width_block; x++) {
+        status[x] = matrix[lane_start + x];
+    }
+}
+
 void matrix_render()
 {
     int x, y;
