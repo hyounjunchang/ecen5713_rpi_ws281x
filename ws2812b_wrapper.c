@@ -15,7 +15,7 @@ Claude Code was used to help debug: https://claude.ai/chat/09145b22-92ff-4de6-bf
 static int width = WIDTH;
 static int height = HEIGHT;
 static int width_block = WIDTH_BLOCK;
-ws2811_led_t dotcolors[COLOR_COUNT] =
+ws2811_led_t dotcolors[8] =
 {
     0x00200000,  // red
     0x00201000,  // yellow 
@@ -105,7 +105,7 @@ void configure_led_grid(uint8_t gpio, uint8_t w, uint8_t h, uint8_t num_players,
     height = h;
     width_block = h/num_players/2;
 
-    ledstring.channel[0].gpionum = gpio_pin;
+    ledstring.channel[0].gpionum = gpio;
     ledstring.channel[0].count = w*h;
     ledstring.channel[0].brightness = brightness;
 }
