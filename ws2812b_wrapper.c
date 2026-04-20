@@ -12,9 +12,9 @@ Claude Code was used to help debug: https://claude.ai/chat/09145b22-92ff-4de6-bf
 
 #include "ws2812b_wrapper.h"
 
-const int width = WIDTH;
-const int height = HEIGHT;
-const int width_block = WIDTH_BLOCK;
+static int width = WIDTH;
+static int height = HEIGHT;
+static int width_block = WIDTH_BLOCK;
 ws2811_led_t dotcolors[COLOR_COUNT] =
 {
     0x00200000,  // red
@@ -99,6 +99,17 @@ int render_led_grid()
     return retval;
 }
 
+void configure_led_grid(uint8_t gpio, uint8_t w, uint8_t h, uint8_t num_players, uint8_t brightness)
+{
+    width = w;
+    height = h;
+    width_block = h/num_players/2;
+
+    ledstring.channel[0].gpionum = gpio_pin;
+    ledstring.channel[0].count = w*h;
+    ledstring.channel[0].brightness = brightness;
+}
+
 int clear_led_grid(){
     ws2811_return_t ret;
     int retval = 0;
@@ -126,7 +137,7 @@ void grid_insert_top_row(ws2811_led_t* colors){
 
 }
 
-void grid_insert_lane(ws2811_led_t* colors , uint8_t lane)
+void grid_insert_lane(ws2811_led_t color, uint8_t lane)
 {
   if(lane >= 0 && lane < 4)
   { 
@@ -139,7 +150,7 @@ void grid_insert_lane(ws2811_led_t* colors , uint8_t lane)
         }
     }
     for (x = 0; x < width_block; x++){
-        matrix[(height - 1) * width + lane_start + x] = colors[x];
+        matrix[(height - 1) * width + lane_start + x] = color;
     }
   }
   

@@ -19,23 +19,10 @@
 //#define STRIP_TYPE              WS2811_STRIP_GBR		// WS2812/SK6812RGB integrated chip+leds
 //#define STRIP_TYPE            SK6812_STRIP_RGBW		// SK6812RGBW (NOT SK6812RGB)
 
-#define WIDTH_BLOCK                   4
+#define WIDTH_BLOCK             4
 #define WIDTH                   16
 #define HEIGHT                  16
 #define LED_COUNT               (WIDTH * HEIGHT)
-
-
-typedef enum {
-    RED,
-    ORANGE,
-    YELLOW,
-    GREEN,
-    LIGHTBLUE,
-    BLUE,
-    PURPLE,
-    PINK,
-    COLOR_COUNT
-} Color;
 
 extern ws2811_led_t dotcolors[];
 extern ws2811_t ledstring;
