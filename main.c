@@ -32,7 +32,7 @@ int main() {
         return EXIT_FAILURE;
     }
     
-    init_frame();
+    init_frame("LetitBe.csv");
 
 
     for (size_t i = 0; running; i++) {
