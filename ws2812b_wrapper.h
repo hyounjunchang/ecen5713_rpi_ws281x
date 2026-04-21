@@ -35,7 +35,7 @@ typedef enum {
     PURPLE,
     PINK,
     COLOR_COUNT
-} Color;
+} Default_Color;
 
 extern ws2811_led_t dotcolors[];
 extern ws2811_t ledstring;
