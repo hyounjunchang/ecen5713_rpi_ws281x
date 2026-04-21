@@ -92,11 +92,11 @@ int parse_csv_frames(const char *filename, frame_buffer_t *out)
 }
 
 
-void init_frame()
+void init_frame(char* beatmap_file)
 {
     frame_buffer_init(&frames);
 
-    if (parse_csv_frames("LetitBe.csv", &frames) != 0) {
+    if (parse_csv_frames(beatmap_file, &frames) != 0) {
         fprintf(stderr, "Failed to parse CSV\n");
         return;
     }

@@ -10,7 +10,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>
-void init_frame();
+void init_frame(char* beatmap_file);
 void render_frame(bool active_row , uint8_t lane);
 void frame_buffer_init(frame_buffer_t *buf);
 void frame_buffer_free(frame_buffer_t *buf);
