@@ -47,7 +47,7 @@ int render_led_grid(); // Renders matrix buffer
 int clear_led_grid(); // turns off all LEDs on grid
 void grid_insert_top_row(ws2811_led_t* colors); // Inserts colors on the TOP row specified by input
 void grid_insert_lane(ws2811_led_t* colors , uint8_t lane);
-void grid_set_bottom_lane(ws2811_led_t* colors, uint8_t lane);
+void grid_set_row_lane(ws2811_led_t* colors, uint8_t lane , uint8_t row);
 void grid_get_bottom_lane(ws2811_led_t* status, uint8_t lane);
 // Helper functions for setting the grid
 // Uses buffer "matrix" ==> color matrix to be rendered on grid

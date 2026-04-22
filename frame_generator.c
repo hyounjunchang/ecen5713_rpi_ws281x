@@ -10,7 +10,25 @@ ws2811_led_t blank_row[WIDTH];
 ws2811_led_t status[WIDTH_BLOCK];
 size_t frame_count;
 
+uint32_t get_frame_index()
+{
+    return (uint32_t)frame_count;
+}
 
+uint8_t get_frame(size_t idx)
+{
+   
+    uint8_t frame = 0;
+
+     for (int lane = 0; lane < 4; lane++) {
+         if(frames.frames[idx].lane[lane])
+         {
+             frame |= (1 << lane);
+         }
+     }
+
+     return frame;
+}
 void frame_buffer_init(frame_buffer_t *buf)
 {
     buf->frames = NULL;
@@ -123,11 +141,22 @@ void init_frame(char* beatmap_file)
     return;
 }
 
-void render_frame(bool active_row , uint8_t active_lane)
+bool render_frame(uint8_t active_lane , uint8_t active_row)
 { 
   if(frame_count < frames.count)
   {
     for (int lane = 0; lane < 4; lane++) {
+    	if(active_row > 0 && active_lane > 0)
+	{	   
+		while (active_lane)
+		{
+		    int index = __builtin_ctz(active_lane);  // get bit position (0-based)
+
+		    grid_set_row_lane(active_color, index, active_row);
+
+		    active_lane &= (active_lane - 1);
+		}
+	}
 	if (frames.frames[frame_count].lane[lane]) {
 	    grid_insert_lane(color_row[lane], lane);
 	    //grid_set_bottom_lane(active_color,lane);
@@ -136,14 +165,20 @@ void render_frame(bool active_row , uint8_t active_lane)
 	    grid_insert_lane(blank_row, lane);
             //grid_set_bottom_lane(inactive_color,lane);
 	}
+	
+
     }
-    grid_get_bottom_lane(status,0);
-    printf("%d %d %d %d\r\n" , status[0],status[1],status[2],status[3]);
+    
+
+    
+
 
     if (render_led_grid() != 0) {
-	return;
+	return 0;
     }
     frame_count++;
+    return 0;
   }
+  return 1;
 }
 
